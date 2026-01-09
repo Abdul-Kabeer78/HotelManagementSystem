@@ -4,20 +4,22 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "cl",
+            "command": "g++",
             "args": [
-                "/EHsc",
-                "/O2",
-                "HotelManagementSystem.cpp",
-                "/link",
-                "/out:HotelManagementSystem.exe"
+                "-g",
+                "-std=c++17",
+                "-O2",
+                "-Wall",
+                "${workspaceFolder}/HotelManagementSystem.cpp",
+                "-o",
+                "${workspaceFolder}/HotelManagementSystem.exe"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "problemMatcher": [
-                "$msCompile"
+                "$gcc"
             ],
             "presentation": {
                 "reveal": "always"
