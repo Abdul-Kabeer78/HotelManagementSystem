@@ -1,0 +1,306 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <limits>
+#include <vector>
+#include <algorithm>
+#include <fstream>
+
+using namespace std;
+
+// Game class to manage the game
+class NumberGuessingGame {
+private:
+    int secretNumber;
+    int attempts;
+    int maxAttempts;
+    int score;
+    int level;
+    vector<int> guessHistory;
+    string playerName;
+    const int MAX_LEVEL = 10;
+    
+    // Generate random number based on level
+    int generateRandomNumber() {
+        int range = 10 * level; // Range increases with level
+        return rand() % range + 1;
+    }
+    
+    // Calculate score based on attempts and level
+    int calculateScore() {
+        return (maxAttempts - attempts + 1) * level * 10;
+    }
+    
+    // Save score to file
+    void saveScore() {
+        ofstream file("scores.txt", ios::app);
+        if (file.is_open()) {
+            file << playerName << " " << score << " " << level << endl;
+            file.close();
+        }
+    }
+    
+    // Display high scores
+    void showHighScores() {
+        cout << "\n=== HIGH SCORES ===\n";
+        ifstream file("scores.txt");
+        if (file.is_open()) {
+            string name;
+            int score, level;
+            vector<pair<int, string>> scores;
+            
+            while (file >> name >> score >> level) {
+                scores.push_back({score, name + " (Level " + to_string(level) + ")"});
+            }
+            file.close();
+            
+            // Sort scores in descending order
+            sort(scores.rbegin(), scores.rend());
+            
+            // Display top 10 scores
+            int count = min(10, (int)scores.size());
+            for (int i = 0; i < count; i++) {
+                cout << i+1 << ". " << scores[i].second << " - " << scores[i].first << " points\n";
+            }
+        } else {
+            cout << "No scores recorded yet!\n";
+        }
+    }
+
+public:
+    NumberGuessingGame() {
+        srand(time(0));
+        score = 0;
+        level = 1;
+        playerName = "Player";
+    }
+    
+    // Set player name
+    void setPlayerName() {
+        cout << "Enter your name: ";
+        cin >> playerName;
+    }
+    
+    // Display game instructions
+    void displayInstructions() {
+        cout << "\n=== NUMBER GUESSING GAME ===\n";
+        cout << "1. I'll think of a number between 1 and " << (10 * level) << endl;
+        cout << "2. You have " << maxAttempts << " attempts to guess it\n";
+        cout << "3. After each guess, I'll tell you if it's HIGHER or LOWER\n";
+        cout << "4. Score increases with level and fewer attempts\n";
+        cout << "5. Complete level to advance to next level\n";
+        cout << "6. Type 0 to quit the game\n";
+        cout << "============================\n\n";
+    }
+    
+    // Setup new game
+    void setupGame() {
+        attempts = 0;
+        maxAttempts = 7 - (level / 2); // Decrease attempts as level increases
+        if (maxAttempts < 3) maxAttempts = 3; // Minimum 3 attempts
+        secretNumber = generateRandomNumber();
+        guessHistory.clear();
+        
+        cout << "\n=== LEVEL " << level << " ===\n";
+        cout << "Range: 1 to " << (10 * level) << endl;
+        cout << "Attempts allowed: " << maxAttempts << endl;
+    }
+    
+    // Get hint based on number properties
+    void giveHint(int guess) {
+        if (level >= 3) {
+            if (secretNumber % 2 == 0) {
+                cout << "Hint: The number is even\n";
+            } else {
+                cout << "Hint: The number is odd\n";
+            }
+        }
+        
+        if (level >= 5) {
+            if (secretNumber % 3 == 0) {
+                cout << "Hint: The number is divisible by 3\n";
+            }
+        }
+    }
+    
+    // Play one round
+    bool playRound() {
+        int guess;
+        
+        while (attempts < maxAttempts) {
+            cout << "\nAttempt " << (attempts + 1) << "/" << maxAttempts << endl;
+            cout << "Enter your guess (0 to quit): ";
+            
+            // Validate input
+            while (!(cin >> guess)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input! Please enter a number: ";
+            }
+            
+            // Check for quit
+            if (guess == 0) {
+                cout << "Quitting game...\n";
+                return false;
+            }
+            
+            // Validate range
+            if (guess < 1 || guess > 10 * level) {
+                cout << "Please enter a number between 1 and " << (10 * level) << "!\n";
+                continue;
+            }
+            
+            attempts++;
+            guessHistory.push_back(guess);
+            
+            // Check guess
+            if (guess == secretNumber) {
+                score += calculateScore();
+                cout << "\n🎉 CORRECT! You guessed it in " << attempts << " attempts!\n";
+                cout << "Points earned: " << calculateScore() << endl;
+                cout << "Total score: " << score << endl;
+                
+                // Show guess history
+                cout << "\nYour guesses: ";
+                for (int g : guessHistory) {
+                    cout << g << " ";
+                }
+                cout << endl;
+                
+                return true;
+            }
+            else if (guess < secretNumber) {
+                cout << "Too LOW! ";
+            }
+            else {
+                cout << "Too HIGH! ";
+            }
+            
+            // Give hint after certain attempts
+            if (attempts == maxAttempts / 2) {
+                giveHint(guess);
+            }
+            
+            // Tell how close they are (only if not last attempt)
+            if (attempts < maxAttempts) {
+                int difference = abs(secretNumber - guess);
+                if (difference <= 3) {
+                    cout << "You're VERY close!";
+                } else if (difference <= 10) {
+                    cout << "You're getting close!";
+                }
+                cout << endl;
+            }
+        }
+        
+        cout << "\n💀 OUT OF ATTEMPTS! The number was: " << secretNumber << endl;
+        return false;
+    }
+    
+    // Main game loop
+    void startGame() {
+        char choice;
+        
+        cout << "Welcome to Number Guessing Game!\n";
+        setPlayerName();
+        
+        do {
+            // Show menu
+            cout << "\n=== MAIN MENU ===\n";
+            cout << "1. Play Game\n";
+            cout << "2. View Instructions\n";
+            cout << "3. View High Scores\n";
+            cout << "4. View Current Level & Score\n";
+            cout << "5. Reset Game\n";
+            cout << "6. Exit\n";
+            cout << "Choice: ";
+            cin >> choice;
+            
+            switch(choice) {
+                case '1': {
+                    bool continuePlaying = true;
+                    
+                    while (continuePlaying && level <= MAX_LEVEL) {
+                        setupGame();
+                        displayInstructions();
+                        
+                        bool won = playRound();
+                        
+                        if (won) {
+                            if (level < MAX_LEVEL) {
+                                cout << "\nAdvancing to next level!\n";
+                                level++;
+                                
+                                char continueChoice;
+                                cout << "Continue to next level? (y/n): ";
+                                cin >> continueChoice;
+                                
+                                if (continueChoice != 'y' && continueChoice != 'Y') {
+                                    continuePlaying = false;
+                                    saveScore();
+                                }
+                            } else {
+                                cout << "\n🏆 CONGRATULATIONS! You've completed all levels!\n";
+                                cout << "Final Score: " << score << endl;
+                                saveScore();
+                                continuePlaying = false;
+                            }
+                        } else {
+                            cout << "Try again? (y/n): ";
+                            char tryAgain;
+                            cin >> tryAgain;
+                            
+                            if (tryAgain != 'y' && tryAgain != 'Y') {
+                                continuePlaying = false;
+                            }
+                        }
+                    }
+                    
+                    if (level > MAX_LEVEL) {
+                        cout << "\n🎊 You are a MASTER guesser!\n";
+                    }
+                    break;
+                }
+                    
+                case '2':
+                    displayInstructions();
+                    break;
+                    
+                case '3':
+                    showHighScores();
+                    break;
+                    
+                case '4':
+                    cout << "\nCurrent Level: " << level << endl;
+                    cout << "Current Score: " << score << endl;
+                    cout << "Player: " << playerName << endl;
+                    break;
+                    
+                case '5':
+                    cout << "\nResetting game...\n";
+                    score = 0;
+                    level = 1;
+                    cout << "Game reset to Level 1!\n";
+                    break;
+                    
+                case '6':
+                    cout << "\nThanks for playing! Goodbye!\n";
+                    if (score > 0) {
+                        saveScore();
+                    }
+                    return;
+                    
+                default:
+                    cout << "Invalid choice! Please try again.\n";
+            }
+            
+        } while (true);
+    }
+};
+
+// Main function
+int main() {
+    NumberGuessingGame game;
+    game.startGame();
+    return 0;
+}
