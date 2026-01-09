@@ -1,0 +1,24 @@
+{
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}",
+        "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/*/include"
+    ],
+    "C_Cpp.default.defines": [
+        "_DEBUG",
+        "UNICODE"
+    ],
+    "C_Cpp.default.compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.39.33519/bin/Hostx64/x64/cl.exe",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.cStandard": "c17",
+    "C_Cpp.default.intelliSenseEngine": "default",
+    "cSpell.ignoreWords": [
+        "NDEBUG",
+        "COMDAT",
+        "iostream",
+        "fstream",
+        "iomanip"
+    ],
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    }
+}
